@@ -11,6 +11,26 @@ Execute the script and provide the RSS feed URL when prompted.
 ```
 python podcast_downloader.py
 ```
+
+# Feed Requirements
+
+```
+	<?xml version="1.0" encoding="UTF-8"?>
+	<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/">
+  	<channel>
+  		...nodes...
+		<item>
+			...nodes...
+			<enclosure url="http://theFileToDownload.extension"/>
+		</item>
+		<item>
+			...nodes...
+			<enclosure url="http://theFileToDownload.extension"/>
+		</item>
+	</channel>
+	</rss>
+ ```
+
 ### Features
 
 - Downloads podcast episodes based on the provided RSS feed.
