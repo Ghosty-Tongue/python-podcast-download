@@ -15,8 +15,13 @@ from tqdm import tqdm
 # Set the maximum number of episodes to download
 max_episodes = 9999999
 
+# Optional Variables
+# You can hardcode the feed and url variables here to avoid sending them when invoking the script
+FEED = 'http://myfeed.com/rss'
+FOLDER = '/PATH/TO/MY/FOLDER'
+
 # Input RSS feed URL
-feed = input("Enter the RSS feed URL: ")
+feed = input("Enter the RSS feed URL: ") or FEED  # Use FEED if input is empty
 
 # Create download folder named 'downloaded_podcast'
 folder = 'downloaded_podcast'
@@ -59,9 +64,15 @@ if not os.path.exists(podarchive_file):
     with open(podarchive_file, 'w'):
         pass
 
+# User input for start and end episode values
+start_episode = int(input("Enter the start episode (default is 1): ") or 1)
+end_episode = int(input("Enter the end episode (default is maximum): ") or max_episodes)
+
 for i, url in enumerate(url_list):
-    if i >= max_episodes:
+    if i >= end_episode:
         break
+    if i < start_episode - 1:
+        continue
 
     title = title_list[i]
     guid = guid_list[i]
@@ -70,10 +81,12 @@ for i, url in enumerate(url_list):
     file_name = after_slash.split('?')[0]
     file_extension = file_name.split('.')[-1]
 
+    new_file_name = f"{title}.{file_extension}"
+
     if f"{feed} â¢ {guid}" in open(podarchive_file).read():
         print(f"Skipping episode \"{title}\" because it has already been downloaded.")
     else:
-        print(f"Preparing to download episode \"{title}\"...")
+        print(f"Preparing to download episode \"{title}\" as \"{new_file_name}\"...")
         # Repeat in case downloads break mid-transfer.
         try:
             response = requests.get(url, stream=True)
@@ -81,7 +94,7 @@ for i, url in enumerate(url_list):
             file_size = int(response.headers.get('content-length', 0))
             block_size = 8192
             with tqdm(total=file_size, unit='B', unit_scale=True, desc=title, ncols=80) as progress_bar:
-                with open(os.path.join(folder, f"{title}.{file_extension}"), 'wb') as file:
+                with open(os.path.join(folder, new_file_name), 'wb') as file:
                     for chunk in response.iter_content(chunk_size=block_size):
                         file.write(chunk)
                         progress_bar.update(len(chunk))
