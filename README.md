@@ -43,7 +43,7 @@ This script is licensed under the GNU v3.0 License.
 
 ## Changelog
 
-- **v1.0.0 (Date):**
+- **vForked (12/13/2024):**
   - ~~TODO: Create option to rename files to the title of the item + original file extension.~~ Completed.
     - Files are now renamed to the title of the podcast episode along with the original file extension.
   - ~~TODO: Create start and end parameters to limit the range of downloaded podcasts.~~ Completed.
