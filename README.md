@@ -1,53 +1,51 @@
-# Bash Podcast Download
-A simple bash script to download all media from a podcast feed
+# Podcast Downloader
 
-##Usage
-Call the script using
+## Description
 
-	sh podcast-download.sh http://myfeed.com/rss /PATH/TO/DOWNLOAD/FOLDER
-	
-###Optional
+A Python script to download media from a podcast XML feed.
 
-You can hardcode the feed and output path by changing the variables at the top of the file. You can then ommit the feed and folder when envoking the script
+### Usage
 
-	# Optional Variables
-	# You can hardcode the feed and url variables here to avoid sending them when envoking the script
-	
-	FEED='http://myfeed.com/rss'
-	FOLDER='/PATH/TO/MY/FOLDER'
+Execute the script and provide the RSS feed URL when prompted.
 
+```
+python podcast_downloader.py
+```
+### Features
 
-If the media file already exsists then the file is not downloaded. 
+- Downloads podcast episodes based on the provided RSS feed.
+- Renames files to the title of the item + original file extension.
+- Allows setting start and end parameters to limit the range of downloaded podcasts.
 
-Assumes that the RSS feed is formatted correctly with media in the correct hirachy
+## Prerequisites
 
-####Feed requirments
+Make sure you have the required Python libraries installed:
 
-	<?xml version="1.0" encoding="UTF-8"?>
-	<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/">
-  	<channel>
-  		...nodes...
-		<item>
-			...nodes...
-			<enclosure url="http://theFileToDownload.extension"/>
-		</item>
-		<item>
-			...nodes...
-			<enclosure url="http://theFileToDownload.extension"/>
-		</item>
-	</channel>
-	</rss>
-	
+```
+pip install requests beautifulsoup4 tqdm
+```
 
-####Platform Requirments
-This script was written on an OSX machine so assumes that you have the following programs installed
+## How to Use
 
-- curl
-- xpath
-- egrep
-- sed
+1. Run the script: `python podcast_downloader.py`.
+2. Input the RSS feed URL when prompted. Optionally, set start and end episode parameters.
+3. The script will download podcast episodes, displaying a progress bar for each download.
 
-####TODO
+## License
 
-- Create option to rename files to the title of the item + original file extension
-- Create start and end paramaters to limit range of downloaded podcasts
+This script is licensed under the GNU v3.0 License.
+
+## Credits
+
+- Original Bash script by [Andrew Morton](https://github.com/mortocks) ([GitHub Repository](https://github.com/mortocks/bash-podcast-download)).
+- Wowfunhappy's Modified Bash script ([Gist](https://gist.github.com/Wowfunhappy/e042b04a34b25bfe25d04b28914196d4)).
+- Modified to Python by GhostyTongue, adapting Wowfunhappy's changes.
+
+## Changelog
+
+- **v1.0.0 (Date):**
+  - ~~TODO: Create option to rename files to the title of the item + original file extension.~~ Completed.
+    - Files are now renamed to the title of the podcast episode along with the original file extension.
+  - ~~TODO: Create start and end parameters to limit the range of downloaded podcasts.~~ Completed.
+    - Users can set start and end parameters to download a specific range of episodes.
+```
