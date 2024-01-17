@@ -1,5 +1,8 @@
 # Podcast Downloader
 
+# Note:
+Error handling and this readme.md was provided by chatgpt. and hardcoded modifications aswell many other common features were worked and modified by me non ai.
+
 ## Description
 
 A Python script to download media from a podcast XML feed.
