@@ -1,106 +1,59 @@
 import os
 import requests
-from bs4 import BeautifulSoup
-from tqdm import tqdm
+from xml.etree import ElementTree
 
-# Description: A Python script to download most recent media from a podcast XML feed
-#
-# Usage: Execute the script and provide the RSS feed URL.
-#
-# Based on script by Wowfunhappy under the original Bash command-line code
-# Modified to Python by GhostyTongue, adapting Wowfunhappy's modifications from the Bash script
-#
-# Licence: GNU v3.0
+def download_podcasts(feed_url, folder_name, max_episodes=9999999):
+    if not feed_url or not folder_name:
+        print("Error: Feed URL and folder name must be specified.")
+        return
 
-# Set the maximum number of episodes to download
-max_episodes = 9999999
+    folder_path = os.path.join(os.getcwd(), folder_name)
 
-# Optional Variables
-# You can hardcode the feed and url variables here to avoid sending them when invoking the script
-FEED = 'http://myfeed.com/rss'
-FOLDER = '/PATH/TO/MY/FOLDER'
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
 
-# Input RSS feed URL
-feed = input("Enter the RSS feed URL: ") or FEED  # Use FEED if input is empty
-
-# Create download folder named 'downloaded_podcast'
-folder = 'downloaded_podcast'
-
-# Check if feed is empty
-if not feed:
-    print("Error: No feed specified")
-    exit()
-
-# Create destination folder if it doesn't exist
-if not os.path.exists(folder):
-    os.makedirs(folder)
-
-retry_count = 1
-feed_xml = None
-
-while not feed_xml and retry_count <= 10:
     try:
-        response = requests.get(feed)
-        response.raise_for_status()
-        feed_xml = response.text
-    except requests.exceptions.RequestException:
-        retry_count += 1
+        feed_xml = requests.get(feed_url).text
+    except requests.RequestException as e:
+        print(f"Error downloading feed: {e}")
+        return
 
-# Parse XML using BeautifulSoup
-soup = BeautifulSoup(feed_xml, 'xml')
+    root = ElementTree.fromstring(feed_xml)
 
-# Extract enclosure URLs
-url_list = [enclosure['url'] for enclosure in soup.find_all('enclosure')]
+    url_list = [item.find('./enclosure').get('url') for item in root.findall('./channel/item')][:max_episodes]
+    title_list = [item.find('./title').text for item in root.findall('./channel/item')][:max_episodes]
+    guid_list = [item.find('./guid').text for item in root.findall('./channel/item')][:max_episodes]
 
-# Get the xml | extract title elements | remove literal "<title>" | remove literal "</title>" and add newline | remove empty lines | replace colons | correct ampersands
-title_list = [title.text.strip().replace(':', ' -').replace('&amp;', '&') for title in soup.find_all('title')]
+    for i, (url, title, guid) in enumerate(zip(url_list, title_list, guid_list), start=1):
+        after_slash = url.split('/')[-1]
+        file_name = after_slash.split('?')[0]
+        file_extension = file_name.split('.')[-1]
 
-# Get the xml | extract guid elements | remove literal guid opening tag | remove literal "</guid>" and add newline | remove empty lines
-guid_list = [guid.text.strip() for guid in soup.find_all('guid')]
+        if f"{feed_url} â¢ {guid}" in open('podarchive.txt').read():
+            print(f"Skipping episode \"{title}\" because it has already been downloaded.")
+        else:
+            try:
+                response = requests.get(url, stream=True)
+                response.raise_for_status()
 
-# Ensure the existence of the podarchive.txt file
-podarchive_file = 'podarchive.txt'
-if not os.path.exists(podarchive_file):
-    with open(podarchive_file, 'w'):
-        pass
+                with open(os.path.join(folder_path, f"{title}.{file_extension}"), 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            file.write(chunk)
 
-# User input for start and end episode values
-start_episode = int(input("Enter the start episode (default is 1): ") or 1)
-end_episode = int(input("Enter the end episode (default is maximum): ") or max_episodes)
+                with open('podarchive.txt', 'a') as archive_file:
+                    archive_file.write(f"{feed_url} â¢ {guid}\n")
 
-for i, url in enumerate(url_list):
-    if i >= end_episode:
-        break
-    if i < start_episode - 1:
-        continue
+            except requests.RequestException as e:
+                print(f"Error downloading episode \"{title}\": {e}")
 
-    title = title_list[i]
-    guid = guid_list[i]
+        if i >= max_episodes:
+            break
 
-    after_slash = url.split('/')[-1]
-    file_name = after_slash.split('?')[0]
-    file_extension = file_name.split('.')[-1]
+    print("All downloads complete.")
 
-    new_file_name = f"{title}.{file_extension}"
+if __name__ == "__main__":
+    folder_name = input("Enter the folder name where files will be saved: ")
+    feed_url = input("Enter the RSS feed URL: ")
 
-    if f"{feed} â¢ {guid}" in open(podarchive_file).read():
-        print(f"Skipping episode \"{title}\" because it has already been downloaded.")
-    else:
-        print(f"Preparing to download episode \"{title}\" as \"{new_file_name}\"...")
-        # Repeat in case downloads break mid-transfer.
-        try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-            file_size = int(response.headers.get('content-length', 0))
-            block_size = 8192
-            with tqdm(total=file_size, unit='B', unit_scale=True, desc=title, ncols=80) as progress_bar:
-                with open(os.path.join(folder, new_file_name), 'wb') as file:
-                    for chunk in response.iter_content(chunk_size=block_size):
-                        file.write(chunk)
-                        progress_bar.update(len(chunk))
-            with open(podarchive_file, 'a') as archive_file:
-                archive_file.write(f"{feed} â¢ {guid}\n")
-        except requests.exceptions.RequestException as e:
-            print(f"Error downloading episode \"{title}\": {e}")
-
-print("All downloads complete.")
+    download_podcasts(feed_url, folder_name)
