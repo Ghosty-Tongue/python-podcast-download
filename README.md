@@ -45,7 +45,7 @@ python podcast_downloader.py
 Make sure you have the required Python libraries installed:
 
 ```
-pip install requests beautifulsoup4 tqdm
+pip install requests
 ```
 
 ## How to Use
