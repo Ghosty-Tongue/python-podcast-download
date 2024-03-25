@@ -6,10 +6,8 @@ from xml.etree import ElementTree
 import threading
 import configparser
 
-# Initialize configparser
 config = configparser.ConfigParser()
 
-# Load settings from config file if available
 if os.path.exists('config.ini'):
     config.read('config.ini')
     default_concurrent_downloads = int(config.get('Settings', 'default_concurrent_downloads'))
@@ -103,7 +101,6 @@ def open_settings_window():
     settings_window = tk.Toplevel(root)
     settings_window.title("Settings")
 
-    # Concurrent Downloads entry
     concurrent_downloads_frame = tk.Frame(settings_window)
     concurrent_downloads_frame.pack(pady=5)
 
@@ -114,7 +111,6 @@ def open_settings_window():
     concurrent_downloads_entry.pack(side=tk.LEFT)
     concurrent_downloads_entry.insert(tk.END, default_concurrent_downloads)
 
-    # Threading checkbox
     threading_frame = tk.Frame(settings_window)
     threading_frame.pack(pady=5)
 
@@ -122,7 +118,6 @@ def open_settings_window():
     threading_checkbox = tk.Checkbutton(threading_frame, text="Use Threading", variable=threading_var)
     threading_checkbox.pack()
 
-    # Save and Revert Buttons
     def save_settings():
         config['Settings'] = {
             'default_concurrent_downloads': concurrent_downloads_entry.get(),
@@ -135,11 +130,9 @@ def open_settings_window():
     save_button = tk.Button(settings_window, text="Save Settings", command=save_settings)
     save_button.pack()
 
-# GUI setup
 root = tk.Tk()
 root.title("Podcast Downloader")
 
-# Download button
 download_button = tk.Button(root, text="Download", command=on_download_click)
 download_button.pack()
 
