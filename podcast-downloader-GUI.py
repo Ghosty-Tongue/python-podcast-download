@@ -19,7 +19,7 @@ else:
 
 def download_podcasts(feed_url, output_location, max_episodes=9999999999999, concurrent_downloads=default_concurrent_downloads, use_threading=default_use_threading):
     if not feed_url or not output_location:
-        print("Error: Feed URL and output location must be specified.")
+        messagebox.showerror("Error", "Feed URL and output location must be specified.")
         return
 
     if not os.path.exists(output_location):
@@ -28,7 +28,7 @@ def download_podcasts(feed_url, output_location, max_episodes=9999999999999, con
     try:
         feed_xml = requests.get(feed_url).text
     except requests.RequestException as e:
-        print(f"Error downloading feed: {e}")
+        messagebox.showerror("Error", f"Error downloading feed: {e}")
         return
 
     root = ElementTree.fromstring(feed_xml)
@@ -64,7 +64,7 @@ def download_podcasts(feed_url, output_location, max_episodes=9999999999999, con
                     archive_file.write(f"{feed_url} • {guid}\n")
 
             except requests.RequestException as e:
-                print(f"Error downloading episode \"{title}\": {e}")
+                messagebox.showerror("Error", f"Error downloading episode \"{title}\": {e}")
 
         if i >= max_episodes:
             break
@@ -73,7 +73,7 @@ def download_podcasts(feed_url, output_location, max_episodes=9999999999999, con
         for thread in thread_pool:
             thread.join()
 
-    print("All downloads complete.")
+    messagebox.showinfo("Download Complete", "All downloads complete.")
 
 def download_episode(url, title, file_extension, output_location):
     response = requests.get(url, stream=True)
@@ -95,7 +95,6 @@ def on_download_click():
     output_location = output_location_entry.get()
 
     download_podcasts(feed_url, output_location)
-    messagebox.showinfo("Download Complete", "All downloads complete.")
 
 def open_settings_window():
     settings_window = tk.Toplevel(root)
