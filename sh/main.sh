@@ -19,6 +19,10 @@ download_podcasts() {
         mkdir -p "$folder_path"
     fi
 
+    if [ ! -f "podarchive.txt" ]; then
+        touch "podarchive.txt"
+    fi
+
     feed_xml=$(curl -s "$feed_url")
 
     url_list=($(echo "$feed_xml" | grep -o '<enclosure url="[^"]*' | grep -o 'url="[^"]*' | cut -d'"' -f2))
@@ -43,7 +47,7 @@ download_podcasts() {
         if grep -qFx "$feed_url • $guid" podarchive.txt; then
             echo "Skipping episode \"$title\" because it has already been downloaded."
         else
-            if curl -s "$url" | pv -s $(curl -sI "$url" | grep -i Content-Length | awk '{print $2}') -N "$title" | tar -xzf - -C "$episode_folder"; then
+            if curl -s "$url" -o "$episode_folder/$title.$file_extension"; then
                 echo "$feed_url • $guid" >>podarchive.txt
             else
                 echo "Error downloading episode \"$title\"."
