@@ -25,13 +25,11 @@ download_podcasts() {
         url=$(echo "$enclosure" | sed 's/<enclosure url="//' | sed 's/"//')
         title=$(echo "$enclosure" | grep -o 'title=".*"' | sed 's/title="//' | sed 's/"//')
 
-        guid=$(echo "$enclosure" | grep -o 'guid=".*"' | sed 's/guid="//' | sed 's/"//')
-
-        if grep -qFx "$feed_url • $guid" "$folder_path/podarchive.txt"; then
+        if [ -f "$folder_path/${title}.mp3" ]; then
             echo "Skipping episode \"$title\" because it has already been downloaded."
         else
             if curl -s "$url" -o "$folder_path/${title}.mp3"; then
-                echo "$feed_url • $guid" >> "$folder_path/podarchive.txt"
+                echo "$feed_url • $title" >> "$folder_path/podarchive.txt"
             else
                 echo "Error downloading episode \"$title\"."
             fi
