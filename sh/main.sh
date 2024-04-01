@@ -2,21 +2,10 @@
 
 download_podcasts() {
     feed_url=$1
-    folder_name=$2
 
     if [ -z "$feed_url" ]; then
         echo "Error: Feed URL must be specified."
         return
-    fi
-
-    if [ -z "$folder_name" ]; then
-        folder_path="$HOME/Downloads"
-    else
-        folder_path="$HOME/Downloads/$folder_name"
-    fi
-
-    if [ ! -d "$folder_path" ]; then
-        mkdir -p "$folder_path"
     fi
 
     if [ ! -f "podarchive.txt" ]; then
@@ -25,30 +14,24 @@ download_podcasts() {
 
     feed_xml=$(curl -s "$feed_url")
 
-    url_list=($(echo "$feed_xml" | grep -o '<enclosure url="[^"]*' | grep -o 'url="[^"]*' | cut -d'"' -f2))
-    title_list=($(echo "$feed_xml" | grep -o '<title>.*</title>' | sed -e 's/<title>//' -e 's/<\/title>//'))
-    guid_list=($(echo "$feed_xml" | grep -o '<guid>.*</guid>' | sed -e 's/<guid>//' -e 's/<\/guid>//'))
+    domain=$(echo "$feed_url" | awk -F/ '{print $3}')
+    folder_path="$HOME/Downloads/$domain"
 
-    for ((i = 0; i < ${#url_list[@]}; i++)); do
-        url="${url_list[i]}"
-        title="${title_list[i]}"
-        guid="${guid_list[i]}"
+    if [ ! -d "$folder_path" ]; then
+        mkdir -p "$folder_path"
+    fi
 
-        after_slash=$(basename "$url")
-        file_name=$(echo "$after_slash" | cut -d'?' -f1)
-        file_extension=$(echo "$file_name" | rev | cut -d'.' -f1 | rev)
+    for enclosure in $(echo "$feed_xml" | grep -o '<enclosure url="[^"]*'); do
+        url=$(echo "$enclosure" | sed 's/<enclosure url="//' | sed 's/"//')
+        title=$(echo "$enclosure" | grep -o 'title=".*"' | sed 's/title="//' | sed 's/"//')
 
-        episode_folder="$folder_path/$title"
+        guid=$(echo "$enclosure" | grep -o 'guid=".*"' | sed 's/guid="//' | sed 's/"//')
 
-        if [ ! -d "$episode_folder" ]; then
-            mkdir -p "$episode_folder"
-        fi
-
-        if grep -qFx "$feed_url • $guid" podarchive.txt; then
+        if grep -qFx "$feed_url • $guid" "$folder_path/podarchive.txt"; then
             echo "Skipping episode \"$title\" because it has already been downloaded."
         else
-            if curl -s "$url" -o "$episode_folder/$title.$file_extension"; then
-                echo "$feed_url • $guid" >>podarchive.txt
+            if curl -s "$url" -o "$folder_path/${title}.mp3"; then
+                echo "$feed_url • $guid" >> "$folder_path/podarchive.txt"
             else
                 echo "Error downloading episode \"$title\"."
             fi
